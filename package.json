@@ -1,0 +1,24 @@
+{
+  "name": "cs-json-version",
+  "version": "0.1.0",
+  "description": "Updates the version of each provided *.json file then process a commit/tag and push",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/breakbottle/csJsonVersion.git"
+  },
+  "keywords": [
+    "json",
+    "version",
+    "versioning"
+  ],
+  "author": "Clint W. Cain (Small)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/breakbottle/csJsonVersion/issues"
+  },
+  "homepage": "https://github.com/breakbottle/csJsonVersion#readme"
+}
