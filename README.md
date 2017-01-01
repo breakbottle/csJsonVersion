@@ -15,12 +15,13 @@ Updates the version of each provided *.json file then process a commit/tag and p
 //long version
   csVersion.changeVersion('../cs-config.json',params[3],function(v){
       csVersion.changeVersion('package.json',params[3],function(version){
-          csVersion.commitDetails(version);
+          csVersion.commitDetails(version,true);//shouldWeCommitFull:true
           console.info('version added: ',version);
       });
   });
 //short quick version
-  csVersion.run(['../cs-config.json','package.json'],params[3]);
+//@params listOfFiles, shouldWeCommitFull,optionalVersion
+  csVersion.run(['../cs-config.json','package.json'],true,params[3]);
 ```
 ## author(s)
   Clint W. Cain (Small)

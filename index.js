@@ -6,8 +6,13 @@
  */
 var jsonfile = require('jsonfile');
 require('shelljs/global');
-
+var count = 0;
+var status = {
+    version:null,
+    filesProcessd:[]
+}
 var commitDetails = function(version,commit){
+    if(!version ) return false;//no verion no update
     if(commit){
         exec('git add -u');
         exec('git commit -a -m "v'+version+'"');
@@ -50,6 +55,7 @@ var changeVersion = function (configFile,version,callback) {
         //change tsConfig option on the fly, for builds
         if(version){
             obj.version = version;
+            status.version = version;
             jsonfile.writeFile(configFile, obj, function (err) {
                 if (err) {
                     console.error(configFile+" json error: --->", (err || 'none'));
@@ -57,28 +63,29 @@ var changeVersion = function (configFile,version,callback) {
                 if(callback){
                     callback(obj.version);
                 }
-                console.error(configFile+": json set: --->", obj.version)
+                
             });
 
         }
 
     });
 };//
-var count = 0;
+
 var called = function(listOfFiles,ver,commit){
     if(typeof listOfFiles[count] == 'string'){
+        status.filesProcessd.push(listOfFiles[count]);
         changeVersion(listOfFiles[count],ver,function(v){
             count++;
-            called(listOfFiles,ver,commit);
+            called(listOfFiles,status.version,commit);
 
         });
     } else {
-        
-        commitDetails(ver,commit);
+        commitDetails(status.version,commit);
+        console.log("Results:",status);
     }
 
 };
-var config = function (listOfFiles,optionalVersion,commit) {
+var config = function (listOfFiles,commit,optionalVersion) {
     called(listOfFiles,optionalVersion,commit)
 };
 
@@ -97,5 +104,6 @@ module.exports =  {
             });
          */
     run:config
-    //csVersion.run(['../cs-config.json','package.json'],params[3]);
+    //@params listOfFiles, shouldWeCommitFull,optionalVersion
+    //csVersion.run(['../cs-config.json','package.json'],true,params[3]);
 };
