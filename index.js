@@ -7,14 +7,22 @@
 var jsonfile = require('jsonfile');
 require('shelljs/global');
 
-var commitDetails = function(version){
-    exec('git add -u');
-    exec('git commit -a -m "v'+version+'"');
-    exec('git tag v'+version);
-    exec('git push --follow-tags origin master')
+var commitDetails = function(version,commit){
+    if(commit){
+        exec('git add -u');
+        exec('git commit -a -m "v'+version+'"');
+        exec('git tag v'+version);
+        exec('git push --follow-tags origin master')
+    } else {
+        exec('git tag v'+version);
+        exec('git add -u');
+    }
+    
 
 };
 var makeVersion = function(fileVersion){//to be used with automation
+    fileVersion = (fileVersion)?fileVersion:'0.1.0';
+
     var levels = fileVersion.split(".");//expects 0.0.0 Semantic Version
     var patchLimit = 50;
     var minorLimit = 10;
@@ -57,20 +65,21 @@ var changeVersion = function (configFile,version,callback) {
     });
 };//
 var count = 0;
-var called = function(listOfFiles,ver){
+var called = function(listOfFiles,ver,commit){
     if(typeof listOfFiles[count] == 'string'){
         changeVersion(listOfFiles[count],ver,function(v){
             count++;
-            called(listOfFiles,ver);
+            called(listOfFiles,ver,commit);
 
         });
     } else {
-        commitDetails(ver);
+        
+        commitDetails(ver,commit);
     }
 
 };
-var config = function (listOfFiles,optionalVersion) {
-    called(listOfFiles,optionalVersion)
+var config = function (listOfFiles,optionalVersion,commit) {
+    called(listOfFiles,optionalVersion,commit)
 };
 
 module.exports =  {
