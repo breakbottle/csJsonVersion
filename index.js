@@ -11,16 +11,18 @@ var status = {
     version:null,
     filesProcessd:[]
 }
-var commitDetails = function(version,commit){
+var commitDetails = function(version,commit,commands){
     if(!version ) return false;//no verion no update
     if(commit){
         exec('git add -u');
         exec('git commit -a -m "v'+version+'"');
         exec('git tag v'+version);
         exec('git push --follow-tags origin master')
+        if(commands) exec(commands);
     } else {
         exec('git tag v'+version);
         exec('git add -u');
+        if(commands) exec(commands);
     }
     
 
@@ -71,7 +73,7 @@ var changeVersion = function (configFile,version,callback) {
     });
 };//
 
-var called = function(listOfFiles,ver,commit){
+var called = function(listOfFiles,ver,commit,commands){
     if(typeof listOfFiles[count] == 'string'){
         status.filesProcessd.push(listOfFiles[count]);
         changeVersion(listOfFiles[count],ver,function(v){
@@ -80,30 +82,36 @@ var called = function(listOfFiles,ver,commit){
 
         });
     } else {
-        commitDetails(status.version,commit);
+        commitDetails(status.version,commit,commands);
         console.log("Results:",status);
     }
 
 };
-var config = function (listOfFiles,commit,optionalVersion) {
-    called(listOfFiles,optionalVersion,commit)
+/**
+ * configs = {
+ *      listOfFiles:[],
+ *      optionalVersion:null, //The full Semantic Version will be used [ 1.0.3 ]
+ *      useCommitOptions:boolean:false, //Use default commit,tag,push to origin master
+ *      postCommands:string //cli commands to run after git tag
+ * }
+ */
+var config = function (configs) {
+    if(typeof configs != 'object'){
+        console.error("configs provided is not an object",configs);
+        return null;
+    }
+    if(configs.defaultCommitOptions){
+        called(configs.listOfFiles,configs.optionalVersion,configs.useCommitOptions);
+    } else {
+        called(configs.listOfFiles,configs.optionalVersion,false,configs.postCommands);
+    }
+    
 };
 
 module.exports =  {
-    changeVersion:changeVersion,
-    commitDetails:commitDetails,
-    //COMMAND: @params: version [OPTIONAL:IF NOT PASSED IT WILL AUTO INCREMENT - 5.0.5]
-    //example: Called Manually for changeVersion and commitDetails
-        /*
-            var csVersion = require('cs-version');
-            csVersion.changeVersion('../cs-config.json',params[3],function(v){
-                csVersion.changeVersion('package.json',params[3],function(version){
-                    csVersion.commitDetails(version);
-                    console.info('version added: ',version);
-                });
-            });
-         */
     run:config
-    //@params listOfFiles, shouldWeCommitFull,optionalVersion
-    //csVersion.run(['../cs-config.json','package.json'],true,params[3]);
+    /*csVersion.run({
+       listOfFiles:['../cs-config.json','package.json']
+     });
+  */
 };

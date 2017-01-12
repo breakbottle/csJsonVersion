@@ -12,16 +12,16 @@ Updates the version of each provided *.json file then process a commit/tag and p
 ```javascript
 
   var csVersion = require('cs-version');
-//long version
-  csVersion.changeVersion('../cs-config.json',params[3],function(v){
-      csVersion.changeVersion('package.json',params[3],function(version){
-          csVersion.commitDetails(version,true);//shouldWeCommitFull:true
-          console.info('version added: ',version);
-      });
-  });
-//short quick version
-//@params listOfFiles, shouldWeCommitFull,optionalVersion
-  csVersion.run(['../cs-config.json','package.json'],true,params[3]);
+
+
+  var configs = {
+       listOfFiles:['../cs-config.json','package.json'],
+       optionalVersion:1.2.3, //The full Semantic Version will be used [ 1.0.3 ]
+       useCommitOptions:false, //Use default commit,tag,push to origin master
+       postCommands:"echo hello world" //cli commands to run after git tag
+  }
+  
+  csVersion.run(configs);
 ```
 ## author(s)
   Clint W. Cain (Small)
