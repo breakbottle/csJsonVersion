@@ -102,7 +102,7 @@ var config = function (configs) {
         console.error("configs provided is not an object",configs);
         return null;
     }
-    if(configs.defaultCommitOptions){
+    if(configs.useCommitOptions){
         called(configs.listOfFiles,configs.optionalVersion,configs.useCommitOptions,configs.postCommands,configs.branch);
     } else {
         called(configs.listOfFiles,configs.optionalVersion,false,configs.postCommands,configs.branch);
