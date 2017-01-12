@@ -11,13 +11,14 @@ var status = {
     version:null,
     filesProcessd:[]
 }
-var commitDetails = function(version,commit,commands){
+var commitDetails = function(version,commit,commands,branch){
     if(!version ) return false;//no verion no update
     if(commit){
+        var br = branch || 'master'
         exec('git add -u');
         exec('git commit -a -m "v'+version+'"');
         exec('git tag v'+version);
-        exec('git push --follow-tags origin master')
+        exec('git push --follow-tags origin '+br)
         if(commands) exec(commands);
     } else {
         exec('git tag v'+version);
@@ -73,7 +74,7 @@ var changeVersion = function (configFile,version,callback) {
     });
 };//
 
-var called = function(listOfFiles,ver,commit,commands){
+var called = function(listOfFiles,ver,commit,commands,branch){
     if(typeof listOfFiles[count] == 'string'){
         status.filesProcessd.push(listOfFiles[count]);
         changeVersion(listOfFiles[count],ver,function(v){
@@ -82,7 +83,7 @@ var called = function(listOfFiles,ver,commit,commands){
 
         });
     } else {
-        commitDetails(status.version,commit,commands);
+        commitDetails(status.version,commit,commands,branch);
         console.log("Results:",status);
     }
 
@@ -93,6 +94,7 @@ var called = function(listOfFiles,ver,commit,commands){
  *      optionalVersion:null, //The full Semantic Version will be used [ 1.0.3 ]
  *      useCommitOptions:boolean:false, //Use default commit,tag,push to origin master
  *      postCommands:string //cli commands to run after git tag
+ *      branch:string //default master
  * }
  */
 var config = function (configs) {
@@ -101,9 +103,9 @@ var config = function (configs) {
         return null;
     }
     if(configs.defaultCommitOptions){
-        called(configs.listOfFiles,configs.optionalVersion,configs.useCommitOptions);
+        called(configs.listOfFiles,configs.optionalVersion,configs.useCommitOptions,configs.postCommands,configs.branch);
     } else {
-        called(configs.listOfFiles,configs.optionalVersion,false,configs.postCommands);
+        called(configs.listOfFiles,configs.optionalVersion,false,configs.postCommands,configs.branch);
     }
     
 };
