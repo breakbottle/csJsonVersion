@@ -1,8 +1,8 @@
 /**
  * Author: Clint Small Cain
  * Date: 1/1/2017
- * Time: 10:34 AM
- * Description:
+ * Updated: 1/16/2017
+ * Description: Updates the version of each provided *.json file then process a commit/tag and push
  */
 var jsonfile = require('jsonfile');
 require('shelljs/global');
@@ -10,31 +10,44 @@ var count = 0;
 var status = {
     version:null,
     filesProcessed:[]
-}
+};
+/**
+ * Uses git to commit changes *.json files
+ * @param version {string} - The version to be used.
+ * @param commit {boolean} - True to commit tag and push, False only commit and tag
+ * @param commands {string} - CLI expressions
+ * @param branch {string} - Branch you want to push to use 'commit' set to true
+ * @returns {boolean}
+ */
 var commitDetails = function(version,commit,commands,branch){
     if(!version ) return false;//no version no update
     if(commit){
-        
         exec('git add -u');
         exec('git commit -a -m "v'+version+'"');
         exec('git tag v'+version);
-        if(branch) exec('git push --follow-tags origin '+branch)
+        if(branch) exec('git push --follow-tags origin '+branch);
         if(commands) exec(commands);
     } else {
         exec('git tag v'+version);
         exec('git add -u');
         if(commands) exec(commands);
     }
-    
-
+    return true;
 };
-var makeVersion = function(fileVersion){//to be used with automation
-    fileVersion = (fileVersion)?fileVersion:'0.1.0';
+
+/**
+ * Create the version based on inputs.
+ * @param fileVersion {string} - The semantic version to be used to calculate the next version
+ * @param limits {object} - contains the patchLimit & minorLimit, these are defaulted to 50 & 10
+ * @returns {string} - Returns the final calculated version
+ */
+var makeVersion = function(fileVersion,limits){//to be used with automation
+    fileVersion = fileVersion || '0.1.0';
+    limits = limits || {};
 
     var levels = fileVersion.split(".");//expects 0.0.0 Semantic Version
-    var patchLimit = 50;
-    var minorLimit = 10;
-
+    var patchLimit = limits.patchLimit || 50;
+    var minorLimit = limits.minorLimit || 10;
     if(levels[2] <= patchLimit){
         levels[2] = parseInt(levels[2])+1;
     } else {
@@ -47,15 +60,23 @@ var makeVersion = function(fileVersion){//to be used with automation
         }
     }
     return levels[0] + "." + levels[1] + "." + levels[2];
-};//
-var changeVersion = function (configFile,version,callback) {
+};
+
+/**
+ * Read in the *.json file version, calculate the new version & write json file
+ * @param configFile {string} - the JSON file path, e.g. custom.json
+ * @param version {string} - use this version instead of the file version
+ * @param limits {object} - contains the patchLimit & minorLimit, these are defaulted to 50 & 10
+ * @param callback {Function}
+ */
+var changeVersion = function (configFile,version,limits,callback) {
     jsonfile.readFile(configFile, function (err, obj) {
         //calculate
         if(!version){
-            version = makeVersion(obj.version);
+            version = makeVersion(obj.version,limits);
         }
 
-        //change tsConfig option on the fly, for builds
+        //change config file option on the fly, for builds
         if(version){
             obj.version = version;
             status.version = version;
@@ -66,7 +87,7 @@ var changeVersion = function (configFile,version,callback) {
                 if(callback){
                     callback(obj.version);
                 }
-                
+
             });
 
         }
@@ -74,46 +95,48 @@ var changeVersion = function (configFile,version,callback) {
     });
 };//
 
-var called = function(listOfFiles,ver,commit,commands,branch){
-    if(typeof listOfFiles[count] == 'string'){
-        status.filesProcessed.push(listOfFiles[count]);
-        changeVersion(listOfFiles[count],ver,function(v){
+/**
+ * Process the config file with options recursively
+ * @param config {object} - contains the options for this module.
+ */
+var process = function(config){
+    if(typeof config.listOfFiles[count] == 'string'){
+        status.filesProcessed.push(config.listOfFiles[count]);
+        changeVersion(config.listOfFiles[count],config.optionalVersion,config.limits,function(v){
             count++;
-            called(listOfFiles,status.version,commit,commands,branch);
-
+            process(config);
         });
     } else {
-        commitDetails(status.version,commit,commands,branch);
+        commitDetails(status.version,config.useCommitOptions,config.postCommands,config.branch);
         console.log("Results:",status);
     }
-
 };
 /**
- * configs = {
+ * Validate config options and begin process
+ * @param configs {object} - {
  *      listOfFiles:[],
  *      optionalVersion:null, //The full Semantic Version will be used [ 1.0.3 ]
  *      useCommitOptions:boolean:false, //Use default commit,tag,push to origin master
  *      postCommands:string //cli commands to run after git tag
  *      branch:string //default master
+ *      limits:{
+ *          patchLimit:50,//when we hit this limit we go up 1 on the main version number
+ *          minorLimit:10//when we hit this limit we go up 1 on the patch version number
+ *      }
  * }
  */
-var config = function (configs) {
+var validate = function (configs) {
     if(typeof configs != 'object'){
         console.error("configs provided is not an object",configs);
         return null;
     }
-    if(configs.useCommitOptions){
-        called(configs.listOfFiles,configs.optionalVersion,configs.useCommitOptions,configs.postCommands,configs.branch);
-    } else {
-        called(configs.listOfFiles,configs.optionalVersion,false,configs.postCommands,configs.branch);
-    }
-    
+    process(configs);
 };
 
 module.exports =  {
-    run:config
+    run:validate
     /*csVersion.run({
-       listOfFiles:['../cs-config.json','package.json']
+        listOfFiles:['../cs-config.json','package.json']
      });
-  */
+     */
 };

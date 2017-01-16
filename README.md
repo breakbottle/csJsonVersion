@@ -19,6 +19,10 @@ Updates the version of each provided *.json file then process a commit/tag and p
        useCommitOptions:false, //Use default commit,tag,push to origin master
        postCommands:"echo hello world" //cli commands to run after git tag
        branch:"dev" //no defaults
+       limits:{
+           patchLimit:50,//when we hit this limit we go up 1 on the main version number
+           minorLimit:10,//when we hit this limit we go up 1 on the patch version number
+       }
   }
   
   csVersion.run(configs);
