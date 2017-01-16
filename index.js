@@ -9,16 +9,16 @@ require('shelljs/global');
 var count = 0;
 var status = {
     version:null,
-    filesProcessd:[]
+    filesProcessed:[]
 }
 var commitDetails = function(version,commit,commands,branch){
-    if(!version ) return false;//no verion no update
+    if(!version ) return false;//no version no update
     if(commit){
-        var br = branch || 'master'
+        
         exec('git add -u');
         exec('git commit -a -m "v'+version+'"');
         exec('git tag v'+version);
-        exec('git push --follow-tags origin '+br)
+        if(branch) exec('git push --follow-tags origin '+branch)
         if(commands) exec(commands);
     } else {
         exec('git tag v'+version);
@@ -59,7 +59,7 @@ var changeVersion = function (configFile,version,callback) {
         if(version){
             obj.version = version;
             status.version = version;
-            jsonfile.writeFile(configFile, obj, function (err) {
+            jsonfile.writeFile(configFile, obj,{spaces:2}, function (err) {
                 if (err) {
                     console.error(configFile+" json error: --->", (err || 'none'));
                 }
@@ -76,10 +76,10 @@ var changeVersion = function (configFile,version,callback) {
 
 var called = function(listOfFiles,ver,commit,commands,branch){
     if(typeof listOfFiles[count] == 'string'){
-        status.filesProcessd.push(listOfFiles[count]);
+        status.filesProcessed.push(listOfFiles[count]);
         changeVersion(listOfFiles[count],ver,function(v){
             count++;
-            called(listOfFiles,status.version,commit);
+            called(listOfFiles,status.version,commit,commands,branch);
 
         });
     } else {
