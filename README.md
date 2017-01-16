@@ -26,6 +26,16 @@ Updates the version of each provided *.json file then process a commit/tag and p
   }
   
   csVersion.run(configs);
+
+  //Gulp Example
+  gulp.task('version', function() {
+    csVersion.run({
+        listOfFiles:['../cs-config.json','package.json'],
+        useCommitOptions:true,
+        postCommands:'echo version from gulp',
+        branch:"development"
+    });
+  });
 ```
 ## author(s)
 
