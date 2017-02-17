@@ -10,7 +10,7 @@ Updates the version of each provided *.json file then process a commit/tag and p
 
 ```javascript
 
-  var csVersion = require('cs-version');
+  var csVersion = require('cs-json-version');
 
 
   var configs = {
@@ -18,6 +18,7 @@ Updates the version of each provided *.json file then process a commit/tag and p
        optionalVersion:'1.2.3', //The full Semantic Version will be used [ 1.0.3 ], this is optional, will take the version in the file if no version property in the file will default to 0.1.0
        useCommitOptions:false, //Use default commit,tag,push to origin master
        postCommands:"echo hello world" //cli commands to run after git tag
+       returnVersion:Function, //callback function that return version saved.
        branch:"dev" //no defaults
        limits:{
            patchLimit:50,//when we hit this limit we go up 1 on the main version number

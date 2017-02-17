@@ -109,6 +109,9 @@ var process = function(config){
     } else {
         commitDetails(status.version,config.useCommitOptions,config.postCommands,config.branch);
         console.log("Results:",status);
+        if(config.returnVersion){
+            config.returnVersion(status.version);
+        }
     }
 };
 /**
@@ -119,6 +122,7 @@ var process = function(config){
  *      useCommitOptions:boolean:false, //Use default commit,tag,push to origin master
  *      postCommands:string //cli commands to run after git tag
  *      branch:string //default master
+ *      returnVersion:Function, //callback function
  *      limits:{
  *          patchLimit:50,//when we hit this limit we go up 1 on the main version number
  *          minorLimit:10//when we hit this limit we go up 1 on the patch version number
