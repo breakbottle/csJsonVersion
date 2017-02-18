@@ -1,7 +1,7 @@
 /**
  * Author: Clint Small Cain
  * Date: 1/1/2017
- * Updated: 1/16/2017
+ * Updated: 2/18/2017
  * Description: Updates the version of each provided *.json file then process a commit/tag and push
  */
 var jsonfile = require('jsonfile');
@@ -17,10 +17,29 @@ var status = {
  * @param commit {boolean} - True to commit tag and push, False only commit and tag
  * @param commands {string} - CLI expressions
  * @param branch {string} - Branch you want to push to use 'commit' set to true
+ * @param callback {Function} - call back after before update
  * @returns {boolean}
  */
-var commitDetails = function(version,commit,commands,branch){
+var commitDetails = function(version,commit,commands,branch,callback){
     if(!version ) return false;//no version no update
+    if(callback){
+        callback(version,function(){
+            addToGit(commit,version,commands,branch);
+        });
+    } else {
+        addToGit(commit,version,commands,branch);
+    }
+
+    return true;
+};
+/**
+ * add to git repository with conditions
+ * @param commit
+ * @param version
+ * @param commands
+ * @param branch
+ */
+var addToGit  = function(commit,version,commands,branch){
     if(commit){
         exec('git add -u');
         exec('git commit -a -m "v'+version+'"');
@@ -32,7 +51,6 @@ var commitDetails = function(version,commit,commands,branch){
         exec('git add -u');
         if(commands) exec(commands);
     }
-    return true;
 };
 
 /**
@@ -107,11 +125,8 @@ var process = function(config){
             process(config);
         });
     } else {
-        commitDetails(status.version,config.useCommitOptions,config.postCommands,config.branch);
+        commitDetails(status.version,config.useCommitOptions,config.postCommands,config.branch,config.returnVersion);
         console.log("Results:",status);
-        if(config.returnVersion){
-            config.returnVersion(status.version);
-        }
     }
 };
 /**
