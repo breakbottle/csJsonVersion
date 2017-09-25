@@ -66,7 +66,7 @@ var makeVersion = function(fileVersion,limits){//to be used with automation
     var levels = fileVersion.split(".");//expects 0.0.0 Semantic Version
     var patchLimit = limits.patchLimit || 50;
     var minorLimit = limits.minorLimit || 10;
-    if(levels[2] <= patchLimit){
+    if(levels[2] < patchLimit){
         levels[2] = parseInt(levels[2])+1;
     } else {
         levels[2] = 0;
@@ -89,6 +89,11 @@ var makeVersion = function(fileVersion,limits){//to be used with automation
  */
 var changeVersion = function (configFile,version,limits,callback) {
     jsonfile.readFile(configFile, function (err, obj) {
+        if(err){
+            console.error(configFile+" read error: --->", (err || 'none'));
+            return false;
+        }
+
         //calculate
         if(!version){
             version = makeVersion(obj.version,limits);
@@ -134,7 +139,7 @@ var process = function(config){
  * @param configs {object} - {
  *      listOfFiles:[],
  *      optionalVersion:null, //The full Semantic Version will be used [ 1.0.3 ]
- *      useCommitOptions:boolean:false, //Use default commit,tag,push to origin master
+ *      useCommitOptions:boolean:false, //Use default commit,tag,push to origin (branch) master
  *      postCommands:string //cli commands to run after git tag
  *      branch:string //default master
  *      returnVersion:Function, //callback function
