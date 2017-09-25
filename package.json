@@ -1,6 +1,6 @@
 {
   "name": "cs-json-version",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Updates the version of each provided *.json file then process a commit/tag and push",
   "main": "index.js",
   "scripts": {
