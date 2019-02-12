@@ -65,43 +65,48 @@ class csJsonVersion{
         const minorLimit = limits.minorLimit || 10;
         const modScoreP = limits.modifyScoreP || 25;
         const modScoreM = limits.modifyScoreM || 75;
+        const _this = this;
         
-
         if(this.config.useCommitOptions){
             exec('git add -u'); 
             exec('git diff --cached --shortstat',function(code, stdout, stderr){ //numstat
                 if(!stderr){
                     let out = stdout.split(",");
-                    var fileChanged = parseInt(out[0]);//.substr(0,2)
-                    let insertions = parseInt(out[1]);//.substr(0,2)
-                    let deletions =parseInt(out[2]);//.substr(0,2)
-                    let fileModificationScore = Math.abs((insertions - deletions) / fileChanged);
-                 
-                    if(fileModificationScore <= modScoreP){
-                        levels[2] = parseInt(levels[2])+1;
-                        if(levels[2] > patchLimit){
-                            levels[2] = 0;
-                            if(levels[1] < minorLimit){
-                                levels[1] = parseInt(levels[1])+1;
-                            } else {
+                  
+                    if(out.length >= 3){//we have items staged
+                        var fileChanged = parseInt(out[0]);//.substr(0,2)
+                        let insertions = parseInt(out[1]);//.substr(0,2)
+                        let deletions =parseInt(out[2]);//.substr(0,2)
+                        let fileModificationScore = Math.abs((insertions - deletions) / fileChanged);
+                        if(fileModificationScore <= modScoreP){
+                            levels[2] = parseInt(levels[2])+1;
+                            if(levels[2] > patchLimit){
+                                levels[2] = 0;
+                                if(levels[1] < minorLimit){
+                                    levels[1] = parseInt(levels[1])+1;
+                                } else {
+                                    levels[1] = 0;
+                                    levels[0]++;
+                                }
+                            }
+                            //console.log('patch');
+                        } else if(fileModificationScore > modScoreP && fileModificationScore <= modScoreM){
+                            levels[1] = parseInt(levels[1])+1;
+                            if(levels[1] > minorLimit){
                                 levels[1] = 0;
+                                levels[2] = 0;
                                 levels[0]++;
                             }
+                            //console.log('minor');
+                        } else {
+                            levels[0] = parseInt(levels[0])+1;
+                            //console.log('major');
                         }
-                        //console.log('patch');
-                    } else if(fileModificationScore > modScoreP && fileModificationScore <= modScoreM){
-                        levels[1] = parseInt(levels[1])+1;
-                        if(levels[1] > minorLimit){
-                            levels[1] = 0;
-                            levels[2] = 0;
-                            levels[0]++;
-                        }
-                        //console.log('minor');
+                        callback(levels[0] + "." + levels[1] + "." + levels[2]);
                     } else {
-                        levels[0] = parseInt(levels[0])+1;
-                        //console.log('major');
+                        callback(_this.setVersion(levels,patchLimit,minorLimit));
                     }
-                    callback(levels[0] + "." + levels[1] + "." + levels[2]);
+                    
                 } else 
                     throw new Error("Problem getting git stats: "+stderr);
             });
