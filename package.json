@@ -1,6 +1,6 @@
 {
   "name": "cs-json-version",
-  "version": "0.2.1",
+  "version": "0.3.1",
   "description": "Updates the version of each provided *.json file then process a commit/tag and push",
   "main": "index.js",
   "scripts": {
@@ -13,7 +13,9 @@
   "keywords": [
     "json",
     "version",
-    "versioning"
+    "versioning",
+    "version files",
+    "version json files"
   ],
   "author": "Clint W. Cain (Small)",
   "license": "ISC",
